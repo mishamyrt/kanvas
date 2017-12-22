@@ -27,11 +27,12 @@ ursi({
                 })
                 layer.add(shape),
                 stage.add(layer);
-                // console.log(shape, layer, stage)
-                setTimeout(() => {
-                    shape.states.switch('right')
+                let flag = false
+                setInterval(() => {
+                    shape.states.switch(flag ? 'right' : 'default')
+                    flag = !flag
                     // console.log(shape)
-                }, 300)
+                }, 1500)
             }
         },
         {

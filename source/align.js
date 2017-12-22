@@ -33,9 +33,10 @@ const right = (objectSize, layerSize, property, offset = 0) => {
     if (property !== 'x') {
         throw new Error('Align.right only works for x')
     }
-    console.log(objectSize, layerSize, property, offset)
+    // console.log(objectSize, layerSize, property, offset)
     return layerSize.width - objectSize.width - offset
 }
+
 
 const wrapper = (align, offset = 0) => {
     return {

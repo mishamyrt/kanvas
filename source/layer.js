@@ -36,7 +36,8 @@ export default class Layer {
         return this.canvas_
     }
     updateChild() {
-        this.render()
+        this.outdated = true
+        Kanvas.Service.updateParents(this)
     }
     render(){
         const size = this.size
@@ -46,17 +47,16 @@ export default class Layer {
         for (let object of objects) {
             const x = getCoords('x', object, size)
             const y = getCoords('y', object, size)
-            console.log(x, y)
+            // console.log(x, y)
             context.drawImage(object.canvas, x, y);
         }
-        // console.log(this.canvas_.toDataURL())
         this.outdated = false;
     }
 }
 
 const getCoords = (prop, object, size) => {
     if (typeof(object.state.properties[prop]) === 'object') {
-        // console.log(prop, object, size)
+        // console.log(object)
         return object.state.properties[prop].calculate (
             object.size,
             size,

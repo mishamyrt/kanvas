@@ -47,9 +47,6 @@ class Test {
     get node() {
         return this._node
     }
-    log(message) {
-        console.log(message);
-    }
 }
 
 window.ursi = (configuration) => {
@@ -74,7 +71,7 @@ window.ursi = (configuration) => {
 
 const loadScripts = (scripts, callback) => {
     let count = scripts.length;
-    console.log(count)
+    // console.log(count)
     const loadScript = (url) => {
         const node = create('script', {
             attributes: {

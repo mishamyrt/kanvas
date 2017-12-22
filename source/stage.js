@@ -17,7 +17,7 @@ export default class Stage {
         }   
     }
     set size (size) {
-        console.log('set')
+        // console.log('set')
         this._size = size
         for (const uuid in this.layers) {
             this.layers[uuid].controller.size = size

@@ -12,6 +12,7 @@ export default class KanvasObject {
         this.shape = type;
         this.type = 2
         Kanvas.Service.register(this)
+        this.recalculateSize()
         this.render()
     }
     get state() {
@@ -20,11 +21,11 @@ export default class KanvasObject {
     get canvas() {
         return this.canvas_
     }
+    recalculateSize() {
+        this.size_ = Kanvas.Shape[this.shape].getSize(this.state.properties)
+    }
     get size() {
-        return {
-            width: this.state.width,
-            height: this.state.height
-        }
+        return this.size_
     }
     get states() {
         return {
@@ -49,10 +50,8 @@ export default class KanvasObject {
                 )
             },  
             switch: (name) => {
-                this.states_.current = {
-                    name: name,
-                    properties: this.states_[name]
-                }
+                this.states_.current.name = name
+                this.states_.current.properties = this.states_[name]
                 this.render()
                 Kanvas.Service.updateParents(this)
             }
