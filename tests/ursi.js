@@ -8,13 +8,12 @@ ursi({
         {
             name: 'States',
             run: (test) => {
-                const stage = new Kanvas.Stage({
-                    node: test.get('.stage'),
+                const stage = new Kanvas.Stage(test.get('.stage'), {
                     width: 'auto',
                     height: 200
                 }),
-                layer = new Kanvas.Layer(),
-                shape = new Kanvas.Object('rectangle', {
+                rectangles = new Kanvas.Layer(),
+                roundedRectangle = new Kanvas.Object('rectangle', {
                     x: 50,
                     y: 0,
                     cornerRadius: 30,
@@ -22,34 +21,17 @@ ursi({
                     width: 200,
                     fill: '#f34054',
                 });
-                shape.states.add('right', {
-                    x: Kanvas.Align.right(50)
-                })
-                layer.add(shape),
-                stage.add(layer);
-                let flag = false
-                setInterval(() => {
-                    shape.states.switch(flag ? 'right' : 'default')
-                    flag = !flag
-                    // console.log(shape)
-                }, 1500)
-            }
-        },
-        {
-            name: 'Transitions',
-            run: (test) => {
-                const stage = new Kanvas.Stage(test.get('.stage'), 'auto', 200),
-                rectangles = new Kanvas.Layer(),
-                roundedRectangle = new Kanvas.Object('rectangle', {
-                    x: 0,
-                    y: 0,
-                    cornerRadius: 30,
-                    height: 200,
-                    width: 200,
-                    fill: '#f34054',
-                });
-                rectangles.add(roundedRectangle),
+                rectangles.add(roundedRectangle)
                 stage.add(rectangles);
+                roundedRectangle.states.add('right', {
+                    x: Kanvas.Align.right(50),
+                    fill: '#4cd964'
+                })
+                let flag = true;
+                setInterval(() => {
+                    roundedRectangle.states.switch(flag ? 'default' : 'right')
+                    flag = !flag
+                }, 1000)
             }
         }
     ]

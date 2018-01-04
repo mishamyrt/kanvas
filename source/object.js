@@ -1,84 +1,67 @@
-export default class KanvasObject {
-    constructor(type, properties) {
-        this.canvas_ = document.createElement('canvas');
-        this.context_ = this.canvas_.getContext('2d');
-        this.states_ = {
-            default: generateState(stateTemplate, properties)
-        }
-        this.states_.current = {
-            name: 'default',
-            properties: this.states_.default
-        }
-        this.shape = type;
-        this.type = 2
-        Kanvas.Service.register(this)
-        this.recalculateSize()
-        this.render()
-    }
-    get state() {
-        return this.states_.current
-    }
-    get canvas() {
-        return this.canvas_
-    }
-    recalculateSize() {
-        this.size_ = Kanvas.Shape[this.shape].getSize(this.state.properties)
-    }
-    get size() {
-        return this.size_
-    }
-    get states() {
-        return {
-            current: this.state,
-            get: (name) => this.state_[name],
-            remove: (name) => delete this.state_,
-            set: (properties, render = true) => {
-                this.states_.current = {
-                    name: reservedStateNames[1],
-                    properties: this.states_[properties]
-                }
-                if (render) {
-                    this.render()
-                }
-                Kanvas.Service.updateParents(this)
-            },
-            generate: (properties) => generateState(this.state.properties, properties),
-            add: (name, properties) => {
-                this.states_[name] = generateState(
-                    this.states_.current.properties,
-                    properties
-                )
-            },  
-            switch: (name) => {
-                this.states_.current.name = name
-                this.states_.current.properties = this.states_[name]
-                this.render()
-                Kanvas.Service.updateParents(this)
-            }
-        }
-    }
-    render() {
-        const canvas = this.canvas_,
-              context = this.context_,
-              state = this.state.properties
-        canvas.width = state.width
-        canvas.height = state.height
-        context.clearRect(0, 0, state.width, state.height)
-        Kanvas.Shape[this.shape].draw(context, state)
-        if (state.stroke) {
-            context.lineWidth = state.strokeWidth
-            context.strokeStyle = state.stroke;
-            context.stroke()
-        }
-        if (state.fill) {
-            context.fillStyle = state.fill
-            context.fill()
-        }
-        // window.open('asd');
-    }
-}
+import KanvasNode from './node.js'
+import KanvasRenderer from './renderer.js'
 
-const reservedStateNames = ['current', 'temporary', 'default']
+export default function KanvasObject(type, properties){
+    let parent = null
+    const instance = new KanvasNode(),
+    renderer = instance.renderer = new KanvasRenderer(),
+    processor = Kanvas.Shape[type],
+    emit = (event, parameters) => {
+        if (parent) {
+            parent.emit(event, parameters)
+        }
+    },
+    states = {
+        default: generateState(stateTemplate, properties),
+    },
+    render = () => {
+        renderer.render((context, canvas)=>{
+            const state = states.current.properties;
+            renderer.size = processor.getSize(state)
+            processor.draw(context, state)
+            if (state.fill) {
+                context.fillStyle = state.fill
+                context.fill()
+            }
+            emit('childUpdate', {
+                instance: this
+            })
+        })
+    };
+    instance.on('parentDefined', (event) => {
+        parent = event.instance
+    })
+    instance.states = {
+        get: (name) => states[name],
+        remove: (name) => delete states[name],
+        set: (properties, render = true) => {
+            states.current.name = 'custom'
+            states.current.properties = properties
+            if (render) {
+                render()
+            }
+        },
+        generate: (properties) => generateState(states.current.properties, properties),
+        add: (name, properties) => {
+            states[name] = generateState(states.current.properties, properties)
+        },  
+        switch: (name) => {
+            states.current.name = name
+            states.current.properties = states[name]
+            render()
+        }
+    }
+
+    instance.start(() => {
+        renderer.size = instance.size = processor.getSize(properties)
+        states.current = instance.state = {
+            name: 'default',
+            properties: states.default
+        }
+        render();
+    })
+    return instance
+}
 
 const generateState = (basis, correction) => {
     const state = Object.assign({}, basis)

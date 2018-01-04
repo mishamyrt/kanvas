@@ -1,62 +1,46 @@
-import Type from './types.js'
+import KanvasNode from './node.js'
+import KanvasRenderer from './renderer.js'
 
-export default class Layer {
-    constructor(parameters) {
-        this.canvas_ = document.createElement('canvas');
-        this.context_ = this.canvas_.getContext('2d');
-        this.type = Type.layer
-        Kanvas.Service.register(this)
-        this.outdated = true;
-        this.size_ = {
-            width: 0,
-            height: 0
-        }
+export default function KanvasLayer(type, properties){
+    const instance = new KanvasNode(),
+    renderer = instance.renderer = new KanvasRenderer(),
+    children = []
+
+    instance.on('resize', (event) => {
+        renderer.size = event.size
+        render()
+    })
+    const render = () => {
+        requestAnimationFrame(() => {
+            renderer.render((context => {
+                children.forEach(child => {
+                    const state = child.state.properties
+                    const x = getCoords('x', child, instance.size)
+                    const y = getCoords('y', child, instance.size)
+                    context.drawImage(child.renderer.canvas, x, y)
+                })
+            }))
+        })
     }
-    get size() {
-        return this.size_
-    }
-    set size(size) {
-        if (size.width !== this.size_.width || size.height !== this.size_.height) {
-            this.size_ = size
-            this.canvas_.width = size.width;
-            this.canvas_.height = size.height;
-            this.outdated = true;   
-        }
-    }
-    add(){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-        for(const i in arguments){
-            Kanvas.Service.appendChild(this, arguments[i])
-        }
-        this.outdated = true;
-    }
-    get canvas() {
-        if (this.outdated) {
-            this.render()
-        }
-        return this.canvas_
-    }
-    updateChild() {
-        this.outdated = true
-        Kanvas.Service.updateParents(this)
-    }
-    render(){
-        const size = this.size
-        const context = this.context_;
-        const objects = Kanvas.Service.getChildren(this);
-        context.clearRect(0, 0, size.width, size.height)
-        for (let object of objects) {
-            const x = getCoords('x', object, size)
-            const y = getCoords('y', object, size)
-            // console.log(x, y)
-            context.drawImage(object.canvas, x, y);
-        }
-        this.outdated = false;
-    }
+    instance.on('childAdded', (event) => {
+        children.push(event.instance)
+        render()
+    })
+    instance.on('childAdded', (event) => {
+        children.push(event.instance)
+        render()
+    })
+    instance.on('childUpdate', (event) => {
+        render();
+    })
+    instance.start(() => {
+        render()
+    })
+    return instance
 }
 
 const getCoords = (prop, object, size) => {
     if (typeof(object.state.properties[prop]) === 'object') {
-        // console.log(object)
         return object.state.properties[prop].calculate (
             object.size,
             size,
